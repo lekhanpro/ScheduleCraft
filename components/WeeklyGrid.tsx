@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import { DAY_LABELS, SLOT_MINUTES, WORKING_DAY_END, WORKING_DAY_START } from "@/lib/constants";
 import type { ActiveView, DayAnalysis, ScheduleEvent } from "@/lib/types";
-import { formatHourLabel, formatTimeRange, getDayName } from "@/lib/utils";
+import { cn, formatHourLabel, formatTimeRange, getDayName } from "@/lib/utils";
 import { DayOverloadBadge } from "@/components/DayOverloadBadge";
 import { EventBlock } from "@/components/EventBlock";
 
@@ -79,19 +79,7 @@ function computeLayouts(events: ScheduleEvent[]) {
   return layoutMap;
 }
 
-export function WeeklyGrid({
-  activeView,
-  conflictEventIds,
-  dayAnalyses,
-  events,
-  onCreateEvent,
-  onEditEvent,
-  onHoverEvent,
-  onSelectDay,
-  selectedDay,
-  todayIndex,
-  weekDates
-}: WeeklyGridProps) {
+export function WeeklyGrid({ activeView, conflictEventIds, dayAnalyses, events, onCreateEvent, onEditEvent, onHoverEvent, onSelectDay, selectedDay, todayIndex, weekDates }: WeeklyGridProps) {
   const reduceMotion = useReducedMotion();
   const [currentMinutes, setCurrentMinutes] = useState<number | null>(null);
   const timeLabels = useMemo(() => Array.from({ length: 16 }, (_, index) => WORKING_DAY_START + index * 60), []);
@@ -122,16 +110,11 @@ export function WeeklyGrid({
   const mobileEvents = [...events.filter((event) => event.day === selectedDay)].sort((left, right) => left.startTime - right.startTime);
 
   return (
-    <section className="glass-panel rounded-[28px] p-4 md:p-5">
+    <section className="glass-panel rounded-[32px] p-4 md:p-5">
       <div className="md:hidden">
         <div className="scrollbar-subtle mb-4 flex gap-2 overflow-x-auto pb-1">
           {DAY_LABELS.map((label, index) => (
-            <button
-              key={label}
-              type="button"
-              className={`rounded-full px-4 py-2 text-sm font-medium ${selectedDay === index ? "bg-indigo-500 text-white" : "border border-white/10 bg-white/5 text-slate-300"}`}
-              onClick={() => onSelectDay(index)}
-            >
+            <button key={label} type="button" className={`rounded-full px-4 py-2 text-sm font-medium ${selectedDay === index ? "bg-[rgb(var(--foreground))] text-[rgb(var(--background))]" : "border surface-outline bg-[rgba(var(--background-soft),0.55)] text-soft"}`} onClick={() => onSelectDay(index)}>
               {label}
             </button>
           ))}
@@ -139,30 +122,19 @@ export function WeeklyGrid({
         <div className="space-y-3">
           {mobileEvents.length ? (
             mobileEvents.map((event) => (
-              <button
-                key={event.id}
-                type="button"
-                className="glass-panel-strong flex w-full items-start justify-between rounded-[24px] p-4 text-left"
-                onClick={() => onEditEvent(event)}
-              >
+              <button key={event.id} type="button" className="glass-panel-strong flex w-full items-start justify-between rounded-[24px] p-4 text-left" onClick={() => onEditEvent(event)}>
                 <div>
-                  <p className="text-lg font-semibold text-white">{event.title}</p>
-                  <p className="mt-1 mono-data text-sm text-slate-300">{formatTimeRange(event.startTime, event.endTime)}</p>
-                  {event.location ? <p className="mt-2 text-sm text-slate-400">{event.location}</p> : null}
+                  <p className="text-lg font-semibold text-main">{event.title}</p>
+                  <p className="mt-1 mono-data text-sm text-soft">{formatTimeRange(event.startTime, event.endTime)}</p>
+                  {event.location ? <p className="mt-2 text-sm text-muted-tone">{event.location}</p> : null}
                 </div>
-                {conflictEventIds.has(event.id) ? <AlertTriangle className="h-5 w-5 text-amber-300" /> : null}
+                {conflictEventIds.has(event.id) ? <AlertTriangle className="h-5 w-5 text-[rgb(var(--amber))]" /> : null}
               </button>
             ))
           ) : (
-            <div className="rounded-[24px] border border-dashed border-white/10 bg-white/5 p-6 text-center text-sm text-slate-400">
-              No events on {getDayName(selectedDay)}. Tap below to add one.
-            </div>
+            <div className="panel-muted rounded-[24px] border border-dashed surface-outline p-6 text-center text-sm text-soft">No events on {getDayName(selectedDay)} yet. Add one to start building the day.</div>
           )}
-          <button
-            type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo-500 px-4 py-3 text-sm font-semibold text-white"
-            onClick={() => onCreateEvent(selectedDay, 540)}
-          >
+          <button type="button" className="button-primary w-full" onClick={() => onCreateEvent(selectedDay, 540)}>
             <Plus className="h-4 w-4" />
             Add event to {getDayName(selectedDay)}
           </button>
@@ -170,33 +142,22 @@ export function WeeklyGrid({
       </div>
 
       <div className="hidden md:block">
-        <div
-          className="grid rounded-[24px] border border-white/10 bg-slate-950/30"
-          style={{ gridTemplateColumns: `60px repeat(${daysToRender.length}, minmax(0, 1fr))` }}
-        >
-          <div className="border-b border-white/10 p-3" />
+        <div className="grid overflow-hidden rounded-[28px] border surface-outline bg-[rgba(var(--background-soft),0.32)]" style={{ gridTemplateColumns: `68px repeat(${daysToRender.length}, minmax(0, 1fr))` }}>
+          <div className="border-b surface-outline p-3" />
           {daysToRender.map((day, index) => {
             const date = weekDates[day];
             const analysis = dayAnalysisMap.get(day);
             const isToday = day === todayIndex;
 
             return (
-              <motion.button
-                key={day}
-                type="button"
-                className={`border-b border-l border-white/10 px-3 py-4 text-left ${activeView === "day" || selectedDay === day ? "bg-white/5" : "bg-transparent"}`}
-                initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => onSelectDay(day)}
-              >
+              <motion.button key={day} type="button" className={`border-b border-l surface-outline px-4 py-4 text-left ${activeView === "day" || selectedDay === day ? "bg-[rgba(var(--background-soft),0.64)]" : "bg-transparent"}`} initial={reduceMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} onClick={() => onSelectDay(day)}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-white">{DAY_LABELS[day]}</p>
-                      {isToday ? <span className="rounded-full bg-indigo-500/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-indigo-100">Today</span> : null}
+                      <p className="font-semibold text-main">{DAY_LABELS[day]}</p>
+                      {isToday ? <span className="status-pill bg-[rgba(var(--accent),0.12)] text-[rgb(var(--accent))]">Today</span> : null}
                     </div>
-                    <p className="mt-1 text-sm text-slate-400">{date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                    <p className="mt-1 text-sm text-soft">{date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
                   </div>
                   {analysis ? <DayOverloadBadge day={analysis} /> : null}
                 </div>
@@ -204,13 +165,9 @@ export function WeeklyGrid({
             );
           })}
 
-          <div className="relative h-[900px] border-r border-white/10">
+          <div className="relative h-[900px] border-r surface-outline bg-[rgba(var(--background-soft),0.22)]">
             {timeLabels.map((time) => (
-              <span
-                key={time}
-                className="mono-data absolute left-2 -translate-y-1/2 text-xs text-slate-500"
-                style={{ top: time === WORKING_DAY_END ? GRID_HEIGHT : time - WORKING_DAY_START }}
-              >
+              <span key={time} className="mono-data absolute left-3 -translate-y-1/2 text-xs text-muted-tone" style={{ top: time === WORKING_DAY_END ? GRID_HEIGHT : time - WORKING_DAY_START }}>
                 {formatHourLabel(time)}
               </span>
             ))}
@@ -221,51 +178,24 @@ export function WeeklyGrid({
             const layout = layoutsByDay.get(day) ?? new Map<string, LayoutMeta>();
 
             return (
-              <motion.div
-                key={day}
-                className="relative border-l border-white/10"
-                initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
-              >
-                <div className="relative h-[900px]">
+              <motion.div key={day} className="relative border-l surface-outline" initial={reduceMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.05 }}>
+                <div className="relative h-[900px] bg-[linear-gradient(180deg,rgba(var(--background-soft),0.22),rgba(var(--surface),0.46))]">
                   {slotTimes.map((time) => (
-                    <button
-                      key={`${day}-${time}`}
-                      type="button"
-                      aria-label={`Add event on ${getDayName(day)} at ${formatHourLabel(time)}`}
-                      className="group absolute inset-x-0 border-b border-white/5 transition-colors duration-150 hover:bg-white/5"
-                      style={{ top: time - WORKING_DAY_START, height: ROW_HEIGHT }}
-                      onClick={() => onCreateEvent(day, time, Math.min(time + 60, WORKING_DAY_END))}
-                    >
-                      <span className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/10 p-1 text-slate-300 group-hover:inline-flex">
-                        <Plus className="h-3.5 w-3.5" />
-                      </span>
+                    <button key={`${day}-${time}`} type="button" aria-label={`Add event on ${getDayName(day)} at ${formatHourLabel(time)}`} className="group absolute inset-x-0 border-b border-[rgba(var(--border),0.08)] transition-colors duration-150 hover:bg-[rgba(var(--accent),0.05)]" style={{ top: time - WORKING_DAY_START, height: ROW_HEIGHT }} onClick={() => onCreateEvent(day, time, Math.min(time + 60, WORKING_DAY_END))}>
+                      <span className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-[rgba(var(--accent),0.12)] p-1 text-[rgb(var(--accent))] group-hover:inline-flex"><Plus className="h-3.5 w-3.5" /></span>
                     </button>
                   ))}
 
                   {showNowLine ? (
                     <div className="pointer-events-none absolute inset-x-0 z-10" style={{ top: currentMinutes! - WORKING_DAY_START }}>
-                      <div className="h-px bg-rose-400" />
-                      <div className="absolute -top-1.5 left-0 h-3 w-3 rounded-full bg-rose-400" />
+                      <div className="h-px bg-[rgb(var(--danger))]" />
+                      <div className="absolute -top-1.5 left-0 h-3 w-3 rounded-full bg-[rgb(var(--danger))]" />
                     </div>
                   ) : null}
 
                   {dayEvents.map((event) => {
                     const meta = layout.get(event.id) ?? { lane: 0, laneCount: 1 };
-                    return (
-                      <EventBlock
-                        key={event.id}
-                        event={event}
-                        top={event.startTime - WORKING_DAY_START}
-                        height={Math.max((event.endTime - event.startTime) / SLOT_MINUTES * ROW_HEIGHT, 24)}
-                        widthPercent={100 / meta.laneCount}
-                        leftPercent={(100 / meta.laneCount) * meta.lane}
-                        isConflict={conflictEventIds.has(event.id)}
-                        onClick={onEditEvent}
-                        onHoverChange={onHoverEvent}
-                      />
-                    );
+                    return <EventBlock key={event.id} event={event} top={event.startTime - WORKING_DAY_START} height={Math.max((event.endTime - event.startTime) / SLOT_MINUTES * ROW_HEIGHT, 24)} widthPercent={100 / meta.laneCount} leftPercent={(100 / meta.laneCount) * meta.lane} isConflict={conflictEventIds.has(event.id)} onClick={onEditEvent} onHoverChange={onHoverEvent} />;
                   })}
                 </div>
               </motion.div>
@@ -276,3 +206,4 @@ export function WeeklyGrid({
     </section>
   );
 }
+

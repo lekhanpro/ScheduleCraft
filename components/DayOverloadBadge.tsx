@@ -8,7 +8,7 @@ export function DayOverloadBadge({ day }: { day: DayAnalysis }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-200">
+    <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(var(--amber),0.2)] bg-[rgba(var(--amber),0.1)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[rgb(var(--amber))]">
       <Flame className="h-3 w-3" />
       Overloaded
     </span>

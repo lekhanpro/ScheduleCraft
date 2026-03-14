@@ -17,21 +17,10 @@ export default function WorkloadHeatmapChart({ days }: { days: DayAnalysis[] }) 
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ left: 0, right: 0, top: 24, bottom: 0 }}>
-          <XAxis
-            axisLine={false}
-            tickLine={false}
-            dataKey="day"
-            tick={{ fill: "rgba(148,163,184,0.8)", fontSize: 12 }}
-          />
+          <XAxis axisLine={false} tickLine={false} dataKey="day" tick={{ fill: "rgb(var(--muted))", fontSize: 12 }} />
           <YAxis hide domain={[0, 8]} />
-          <Bar dataKey="hours" radius={[16, 16, 10, 10]} animationDuration={650}>
-            <LabelList
-              dataKey="hours"
-              position="top"
-              formatter={(value: number) => formatHours(value)}
-              fill="rgba(241,245,249,0.92)"
-              fontSize={12}
-            />
+          <Bar dataKey="hours" radius={[18, 18, 12, 12]} animationDuration={700}>
+            <LabelList dataKey="hours" position="top" formatter={(value: number) => formatHours(value)} fill="rgb(var(--foreground))" fontSize={12} />
             {data.map((entry) => (
               <Cell key={entry.day} fill={getHeatmapColor(entry.overloadScore)} />
             ))}

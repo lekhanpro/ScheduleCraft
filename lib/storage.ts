@@ -1,7 +1,8 @@
 ﻿import { SEED_EVENTS } from "@/lib/constants";
 import type { ScheduleEvent, ThemeMode } from "@/lib/types";
 
-export const EVENTS_STORAGE_KEY = "schedulecraft.events";
+const LEGACY_EVENTS_STORAGE_KEY = "schedulecraft.events";
+const EVENTS_STORAGE_PREFIX = "schedulecraft.events";
 export const THEME_STORAGE_KEY = "schedulecraft.theme";
 
 const isBrowser = () => typeof window !== "undefined";
@@ -26,37 +27,59 @@ function isScheduleEvent(value: unknown): value is ScheduleEvent {
   );
 }
 
-export function readStoredEvents() {
-  if (!isBrowser()) {
-    return SEED_EVENTS;
+function getEventsStorageKey(userId: string) {
+  return `${EVENTS_STORAGE_PREFIX}.${userId}`;
+}
+
+function parseStoredEvents(raw: string | null) {
+  if (raw === null) {
+    return { found: false, events: [] as ScheduleEvent[] };
   }
 
   try {
-    const raw = window.localStorage.getItem(EVENTS_STORAGE_KEY);
-
-    if (!raw) {
-      return SEED_EVENTS;
-    }
-
     const parsed = JSON.parse(raw);
 
     if (!Array.isArray(parsed)) {
-      return SEED_EVENTS;
+      return { found: true, events: [] as ScheduleEvent[] };
     }
 
-    const sanitized = parsed.filter(isScheduleEvent);
-    return sanitized.length ? sanitized : SEED_EVENTS;
+    return { found: true, events: parsed.filter(isScheduleEvent) };
   } catch {
-    return SEED_EVENTS;
+    return { found: true, events: [] as ScheduleEvent[] };
   }
 }
 
-export function storeEvents(events: ScheduleEvent[]) {
+export function readStoredEvents(userId: string | null) {
   if (!isBrowser()) {
+    return userId ? SEED_EVENTS : [];
+  }
+
+  if (!userId) {
+    return [];
+  }
+
+  const currentUserEvents = parseStoredEvents(window.localStorage.getItem(getEventsStorageKey(userId)));
+
+  if (currentUserEvents.found) {
+    return currentUserEvents.events;
+  }
+
+  const legacyEvents = parseStoredEvents(window.localStorage.getItem(LEGACY_EVENTS_STORAGE_KEY));
+
+  if (legacyEvents.found && legacyEvents.events.length) {
+    window.localStorage.setItem(getEventsStorageKey(userId), JSON.stringify(legacyEvents.events));
+    return legacyEvents.events;
+  }
+
+  return SEED_EVENTS;
+}
+
+export function storeEvents(events: ScheduleEvent[], userId: string | null) {
+  if (!isBrowser() || !userId) {
     return;
   }
 
-  window.localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+  window.localStorage.setItem(getEventsStorageKey(userId), JSON.stringify(events));
 }
 
 export function readStoredTheme(): ThemeMode {
