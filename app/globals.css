@@ -1,0 +1,165 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 10 15 30;
+  --surface: 17 24 39;
+  --foreground: 241 245 249;
+  --muted: 148 163 184;
+  --border: 255 255 255;
+  --accent: 79 70 229;
+  --amber: 245 158 11;
+  --emerald: 16 185 129;
+  --danger: 239 68 68;
+  --card-glass: rgba(15, 23, 42, 0.68);
+  --card-strong: rgba(15, 23, 42, 0.9);
+  --line-soft: rgba(148, 163, 184, 0.1);
+}
+
+.light {
+  --background: 240 245 255;
+  --surface: 255 255 255;
+  --foreground: 15 23 42;
+  --muted: 71 85 105;
+  --border: 15 23 42;
+  --accent: 67 56 202;
+  --amber: 217 119 6;
+  --emerald: 5 150 105;
+  --danger: 220 38 38;
+  --card-glass: rgba(255, 255, 255, 0.78);
+  --card-strong: rgba(255, 255, 255, 0.92);
+  --line-soft: rgba(51, 65, 85, 0.1);
+}
+
+* {
+  border-color: rgba(var(--border), 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 12%, rgba(16, 185, 129, 0.08), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.1), transparent 26%),
+    rgb(var(--background));
+  color: rgb(var(--foreground));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(circle at center, black, transparent 92%);
+  opacity: 0.8;
+}
+
+::selection {
+  background: rgba(79, 70, 229, 0.28);
+  color: rgb(var(--foreground));
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    @apply outline-none;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="switch"]:focus-visible,
+  [data-focus-visible="true"] {
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.85);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: var(--card-glass);
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 50px rgba(2, 6, 23, 0.25);
+  }
+
+  .glass-panel-strong {
+    background: var(--card-strong);
+    backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 50px rgba(2, 6, 23, 0.3);
+  }
+
+  .panel-divider {
+    border-color: var(--line-soft);
+  }
+
+  .section-kicker {
+    @apply text-[0.68rem] font-medium uppercase tracking-[0.28em] text-muted/80;
+  }
+
+  .metric-chip {
+    @apply inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground/90;
+  }
+
+  .mono-data {
+    font-family: var(--font-mono), monospace;
+    letter-spacing: -0.02em;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer utilities {
+  .scrollbar-subtle {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+  }
+
+  .scrollbar-subtle::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .scrollbar-subtle::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.32);
+    border-radius: 999px;
+  }
+
+  .scrollbar-subtle::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
