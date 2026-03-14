@@ -8,6 +8,7 @@ import {
   setPersistence,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   updateProfile
 } from "firebase/auth";
 import { ArrowRight, Lock, Mail, Sparkles, User2 } from "lucide-react";
@@ -21,33 +22,60 @@ type AuthPanelProps = {
   onContinuePreview?: () => void;
 };
 
-function humanizeAuthError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return "Authentication failed. Please try again.";
+function getAuthErrorCode(error: unknown) {
+  if (error && typeof error === "object" && "code" in error && typeof (error as { code?: unknown }).code === "string") {
+    return (error as { code: string }).code.toLowerCase();
   }
 
-  const message = error.message.toLowerCase();
+  if (error instanceof Error) {
+    const match = error.message.toLowerCase().match(/auth\/[a-z-]+/);
+    return match?.[0] ?? "";
+  }
 
-  if (message.includes("invalid-credential") || message.includes("wrong-password") || message.includes("user-not-found")) {
+  return "";
+}
+
+function humanizeAuthError(error: unknown, host: string) {
+  const code = getAuthErrorCode(error);
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+
+  if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found") || message.includes("invalid-credential") || message.includes("wrong-password") || message.includes("user-not-found")) {
     return "Those credentials do not match an account.";
   }
 
-  if (message.includes("email-already-in-use")) {
+  if (code.includes("email-already-in-use") || message.includes("email-already-in-use")) {
     return "That email is already being used for another account.";
   }
 
-  if (message.includes("weak-password")) {
+  if (code.includes("weak-password") || message.includes("weak-password")) {
     return "Use a stronger password with at least 6 characters.";
   }
 
-  if (message.includes("popup")) {
-    return "The Google sign-in popup was closed before completion.";
+  if (code.includes("operation-not-allowed")) {
+    return "Google sign-in is not enabled in Firebase yet. Enable the Google provider in Firebase Console > Authentication > Sign-in method.";
+  }
+
+  if (code.includes("unauthorized-domain")) {
+    return `This domain is not authorized for Firebase Google sign-in. Add ${host} in Firebase Console > Authentication > Settings > Authorized domains.`;
+  }
+
+  if (code.includes("popup-closed-by-user")) {
+    return "The Google popup was closed before sign-in completed.";
+  }
+
+  if (code.includes("popup-blocked")) {
+    return "The Google popup was blocked by the browser. Redirect sign-in is being attempted instead.";
+  }
+
+  if (code.includes("network-request-failed")) {
+    return "Firebase could not reach the authentication service. Check your network connection and try again.";
   }
 
   return "Authentication failed. Please try again.";
 }
 
 export function AuthPanel({ onContinuePreview }: AuthPanelProps) {
+  const host = typeof window !== "undefined" ? window.location.host : "your deployed domain";
   const hasConfig = hasFirebaseConfig();
   const missingKeys = useMemo(() => getFirebaseConfigMissingKeys(), []);
   const [mode, setMode] = useState<AuthMode>("signin");
@@ -91,7 +119,7 @@ export function AuthPanel({ onContinuePreview }: AuthPanelProps) {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }
     } catch (nextError) {
-      setError(humanizeAuthError(nextError));
+      setError(humanizeAuthError(nextError, host));
     } finally {
       setBusy(false);
     }
@@ -110,7 +138,21 @@ export function AuthPanel({ onContinuePreview }: AuthPanelProps) {
       const auth = await applyPersistence();
       await signInWithPopup(auth, googleProvider);
     } catch (nextError) {
-      setError(humanizeAuthError(nextError));
+      const auth = getFirebaseAuth();
+      const code = getAuthErrorCode(nextError);
+
+      if (auth && (code.includes("popup-blocked") || code.includes("cancelled-popup-request") || code.includes("operation-not-supported-in-this-environment"))) {
+        try {
+          setError("The Google popup was blocked. Redirecting to Google sign-in instead...");
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectError) {
+          setError(humanizeAuthError(redirectError, host));
+          return;
+        }
+      }
+
+      setError(humanizeAuthError(nextError, host));
     } finally {
       setBusy(false);
     }
@@ -241,6 +283,10 @@ export function AuthPanel({ onContinuePreview }: AuthPanelProps) {
             <button type="button" className="button-secondary w-full" onClick={handleGoogle} disabled={busy || !hasConfig}>
               Continue with Google
             </button>
+
+            <p className="text-xs leading-6 text-muted-tone">
+              If Google sign-in fails on a Vercel domain, enable the Google provider and add <span className="font-mono text-main">{host}</span> to Firebase Auth authorized domains.
+            </p>
           </div>
         </section>
       </div>

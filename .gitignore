@@ -9,3 +9,4 @@ coverage
 Thumbs.db
 .env*
 !.env.example
+.playwright-cli
