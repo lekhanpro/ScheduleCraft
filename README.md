@@ -22,7 +22,7 @@ npm run dev
 ## Deployment
 
 - GitHub: https://github.com/lekhanpro/ScheduleCraft
-- Vercel: pending deployment
+- Vercel: https://schedulecraft-five.vercel.app
 
 ## Tech Stack
 
